@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TrioBot — Discord Bot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #080b14;
+      --card: #0e1420;
+      --border: #1a2236;
+      --accent: #5865f2;
+      --accent2: #eb459e;
+      --accent3: #57f287;
+      --text: #e8eaf6;
+      --muted: #7b82a8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(88,101,242,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88,101,242,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glowing blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .blob1 { width: 500px; height: 500px; background: var(--accent); top: -100px; left: -100px; }
+    .blob2 { width: 400px; height: 400px; background: var(--accent2); bottom: -50px; right: -50px; animation-delay: -6s; }
+    .blob3 { width: 300px; height: 300px; background: var(--accent3); top: 50%; left: 50%; animation-delay: -3s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, 20px) scale(1.1); }
+    }
+
+    /* Layout */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Nav */
+    nav {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -1px;
+    }
+
+    .nav-logo span { color: var(--accent2); }
+
+    .nav-link {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .nav-link:hover { color: var(--text); border-color: var(--accent); background: rgba(88,101,242,0.1); }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(87,242,135,0.1);
+      border: 1px solid rgba(87,242,135,0.2);
+      color: var(--accent3);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 32px;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      background: var(--accent3);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -3px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 .trio { color: var(--text); }
+    .hero h1 .bot {
+      color: transparent;
+      -webkit-text-stroke: 2px var(--accent);
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover { background: #4752c4; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(88,101,242,0.4); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--muted); background: var(--card); transform: translateY(-2px); }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 60px 0;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .stat-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+
+    .stat-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Features */
+    .section-title {
+      font-size: 0.75rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--accent2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .features-heading {
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 40px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 80px;
+      animation: fadeUp 0.8s 0.4s ease both;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .feature-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .feature-card:hover::before { opacity: 0.05; }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .feature-name {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .feature-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .stats { grid-template-columns: 1fr; }
+      .hero h1 { letter-spacing: -2px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+
+  <nav>
+    <div class="nav-logo">trio<span>bot</span></div>
+    <a href="https://discord.com/oauth2/authorize" class="nav-link">+ Add to Server</a>
+  </nav>
+
+  <div class="container">
+    <div class="hero">
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        Online & Ready
+      </div>
+      <h1>
+        <span class="trio">Trio</span><span class="bot">Bot</span>
+      </h1>
+      <p>A powerful Discord bot with AI, moderation, fun commands and more — built to make your server better.</p>
+      <div class="cta-group">
+        <a href="https://discord.com/oauth2/authorize" class="btn btn-primary">
+          🤖 Invite TrioBot
+        </a>
+        <a href="https://github.com/MRCube-code" class="btn btn-secondary">
+          View Source
+        </a>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value">50+</div>
+        <div class="stat-label">Commands</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">24/7</div>
+        <div class="stat-label">Uptime</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">Free</div>
+        <div class="stat-label">Forever</div>
+      </div>
+    </div>
+
+    <div class="section-title">// Features</div>
+    <div class="features-heading">Everything your server needs</div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-name">AI Powered</div>
+        <div class="feature-desc">Ask questions and get smart answers powered by Gemini AI directly in Discord.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <div class="feature-name">Moderation</div>
+        <div class="feature-desc">Keep your server safe with powerful moderation tools and a server blacklist system.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎉</div>
+        <div class="feature-name">Fun Commands</div>
+        <div class="feature-desc">Rickroll, horseify, and more fun commands to keep your community entertained.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-name">Summarize</div>
+        <div class="feature-desc">Summarize any text or conversation instantly with AI-powered summarization.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <div class="feature-name">Per-Server Config</div>
+        <div class="feature-desc">Customize TrioBot's behavior for each server with individual configuration settings.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-name">Slash Commands</div>
+        <div class="feature-desc">Clean, modern slash command support for a smooth user experience.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built with ❤️ by <a href="https://github.com/MRCube-code">MRCube-code</a> · TrioBot is not affiliated with Discord Inc.
+  </footer>
+
+</body>
+</html>
